@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <div id="menu">
+        <input type="text" id="adicionar-player">
+        <input type="text" id="cor-do-player">
+    </div>
+    <div id="arena"></div>
+
+
+    <script type="module">
+        const menuDePersonalizacao = document.querySelector("#menu")
+        const arena = document.querySelector("#arena")
+        const inputAdicionarPlayer = document.querySelector("#adicionar-player")
+        const inputCorDoPlayer = document.querySelector("#cor-do-player")
+        setInterval(async () => {
+            const promiseDosPersonagens = await fetch("/lista");
+            const dadosDosPersonagens = await promiseDosPersonagens.json();
+            const array = Object.values(dadosDosPersonagens);
+            array.forEach(params => {
+                const player = document.createElement("div")
+                player.style.position = "absolute"
+                player.style.left = params["0"]["left"] + "px"
+                player.style.bottom = params["0"]["bottom"] + "px"
+                player.style.display = "flex"
+                player.style.alignItems = "center"
+                player.style.justifyContent = "center"
+                player.textContent = params["0"]["nomeDoPlayer"]
+                player.style.height = params["0"]["altura"] + "px"
+                player.style.width = params["0"]["largura"] + "px"
+                player.style.borderRadius = 50 + "px"
+                player.style.backgroundColor = params["0"]["cor"]
+                player.classList.add(params["0"]["nomeDoPlayer"])
+                arena.appendChild(player)
+                setTimeout(() => {
+                    player.remove()
+                }, 100);
+            });
+        }, 100);
+
+        // function removerRastro(params) {
+        //     const 
+        // }
+
+        function personagemAnda(nome) {
+            const playerUtilizado = document.querySelector(`.${nome}`)
+            document.addEventListener("keydown", async (e) => {
+                let tecla = e.key
+                if (tecla === "d") {
+                    const playerAndaDireita = await fetch('/playerAndaDireita', {
+                        method: "POST",
+                        body: JSON.stringify(nome)
+                    }).then(response => response.json())
+                    playerUtilizado.style.left = playerAndaDireita + "px"
+                }
+                if (tecla === "a") {
+                    const playerAndaEsquerda = await fetch('/playerAndaEsquerda', {
+                        method: "POST",
+                        body: JSON.stringify(nome)
+                    }).then(response => response.json())
+                    playerUtilizado.style.left = playerAndaEsquerda + "px"
+                }
+                if (tecla === "w") {
+                    const playerAndaCima = await fetch('/playerAndaCima', {
+                        method: "POST",
+                        body: JSON.stringify(nome)
+                    }).then(response => response.json())
+                    playerUtilizado.style.bottom = playerAndaCima + "px"
+                }
+                if (tecla === "s") {
+                    const playerAndaBaixo = await fetch('/playerAndaBaixo', {
+                        method: "POST",
+                        body: JSON.stringify(nome)
+                    }).then(response => response.json())
+                    playerUtilizado.style.bottom = playerAndaBaixo + "px"
+                }
+            })
+        }
+
+        function personalizacaoDoPersonagem(params) {
+            const player = document.createElement("div")
+            player.style.position = "absolute"
+            player.style.left = params.positionEsquerda + "px"
+            player.style.bottom = params.positionAltura + "px"
+            player.style.display = "flex"
+            player.style.alignItems = "center"
+            player.style.justifyContent = "center"
+            player.textContent = params.nome
+            player.style.height = params.tamanhoAltura + "px"
+            player.style.width = params.tamanhoLargura + "px"
+            player.style.borderRadius = 50 + "px"
+            player.style.backgroundColor = params.cor
+            player.classList.add(params.nome)
+            arena.appendChild(player)
+        }
+
+        window.addEventListener("keyup", async (e) => {
+            let tecla = e.key
+            if (tecla === "Enter") {
+                let nomeNoInput = inputAdicionarPlayer.value
+                let corNoInput = inputCorDoPlayer.value
+                fetch("/adicionarPlayer", {
+                    method: "POST",
+                    body: JSON.stringify({ nomeNoInput, corNoInput })
+                }).then(r => r.json()).then(response => {
+                    personalizacaoDoPersonagem(response)
+                    menuDePersonalizacao.style.display = "none"
+                    arena.style.display = "flex"
+                    personagemAnda(response.nome)
+                })
+            }
+        })
+    </script>
+</body>
+
+</html>
